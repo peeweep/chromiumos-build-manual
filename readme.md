@@ -14,6 +14,8 @@ In this article, `(outside)` mean you need run command outside the `cros_sdk`, `
 
 ## 1: Get the Chromium OS code and start building
 
+https://chromium.googlesource.com/chromiumos/docs/+/master/developer_guide.md
+
 ### Install dependencies
 
 ``` shell
@@ -242,6 +244,8 @@ emerage-$BOARD sys-kernel/chromeos-kernel-5_10
 
 ## 3: Deploy CrOS devserver
 
+https://chromium.googlesource.com/chromiumos/chromite/+/refs/heads/master/docs/devserver.md
+
 The dev server allows you to update your Chromium OS machine with new builds without having to copy them via a USB drive. It also serves as a static file repository, allowing you to install your own packages and scripts making it easy to customize your machine for development purposes.
 
 ### Deploy CrOS devserver to cros_sdk
@@ -304,7 +308,7 @@ docker run -d --volume static:/usr/lib64/devserver/static/:rw --privileged cros-
 
 ## 4: Connect with devserver
 
-`/etc/lsb-release` records something such as devserver/board.
+`/etc/lsb-release` records something such as devserver/board, `peeweep-System-Product-Name` is my devserver machine's hostname.
 
 ```
 CHROMEOS_AUSERVER=http://peeweep-System-Product-Name:8080/update
