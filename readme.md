@@ -302,6 +302,19 @@ docker commit ${ID} cros-sdk:$BOARD
 docker run -d --volume static:/usr/lib64/devserver/static/:rw --privileged cros-sdk -- sudo start_devserver
 ```
 
+## 4: Connect with devserver
+
+`/etc/lsb-release` records something such as devserver/board.
+
+```
+CHROMEOS_AUSERVER=http://peeweep-System-Product-Name:8080/update
+CHROMEOS_DEVSERVER=http://peeweep-System-Product-Name:8080
+CHROMEOS_RELEASE_TRACK=testimage-channel
+CHROMEOS_RELEASE_BUILD_TYPE=Test Build - peeweep
+CHROMEOS_RELEASE_BOARD=amd64-generic
+```
+
+Get updates from devserver: `update_engine_client --update`
 
 ## Problems and fixes
 
