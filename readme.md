@@ -105,6 +105,7 @@ setup_board --board=${BOARD}
 
 <details>
   <summary>Click show details</summary>
+
 Check the installed version
 ``` shell
 # (inside)
@@ -126,19 +127,19 @@ exit
 ```
 </details>
 
-3. Install kvm and check kvm is ok.
+3. Build test image
+
+``` shell
+# (inside)
+./build_image --board=${BOARD} --noenable_rootfs_verification test
+```
+
+4. Install kvm and check kvm is ok.
 
 ``` shell
 # (outside)
 sudo apt-get install qemu-kvm
 sudo kvm-ok
-```
-
-4. Build test image
-
-``` shell
-# (inside)
-./build_image --board=${BOARD} --noenable_rootfs_verification test
 ```
 
 5. Convert test image to vm image
@@ -170,3 +171,88 @@ vncviewer localhost:5900
 
 You can use `cros_vm --stop --board=${BOARD}` to stop vm.
 
+## 2: Kernel replacement
+
+### Check the current kernel
+
+``` shell
+# (inside)
+cros_vm --start --image-path=../build/images/${BOARD}/latest/chromiumos_qemu_image.bin --board=${BOARD}
+```
+
+``` shell
+# (outside)
+ssh root@localhost -p 9222
+```
+
+```
+localhost ~ # uname -a
+Linux localhost 4.14.273-18374-gf939ed477069 #1 SMP PREEMPT Sat Mar 26 22:48:59 CST 2022 x86_64 Intel Xeon E312xx (Sandy Bridge) AuthenticAMD GNU/Linuxlocalhost ~ # uname -r
+4.14.273-18374-gf939ed477069
+localhost ~ # exit
+```
+
+``` shell
+# (inside)
+cros_vm --stop --board=${BOARD}
+```
+
+### Way 1: change virtual/linux-sources USE
+
+`kernel-5_10` and `kernel-4_14` are in `virtual/linux-sources`'s USE, you can install 5.10 kernel by `virtual/linux-sources`.
+
+``` shell
+# (inside)
+emerge-${BOARD} --unmerge chromeos-kernel-4_14
+USE="kernel-5_10 -kernel-4_14" emerge-${BOARD} virtual/linux-sources
+```
+
+This method can only take effect temporarily, because the USE of 4.14kernel is used in the base profile, it will take effect on `linux-sources`, and `./build_packages --board=${BOARD}` will still switch back to the 4.14 kernel when rerun it, if you want to make it permanent, we can use method 2.
+
+### Way 2: change global USE
+
+There is such a log when `./build_packages --board=${BOARD}`
+
+```
+02:05:44.250: INFO: Setting up portage in the sysroot.
+02:05:44.879: INFO: Selecting profile: /mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base for /build/amd64-generic
+02:05:44.963: INFO: Updating toolchain.
+```
+
+We can see that the 4.14 kernel is defined from `/mnt/host/source/src/overlays/overlay-amd64-generic/profiles/base/make.defaults`
+
+`USE="${USE} legacy_keyboard legacy_power_button sse kernel-4_14"`
+
+We can change the USE in `make.conf` to override this USE
+
+``` shell
+# (inside)
+vim /build/amd64-generic/etc/make.conf
+```
+
+``` diff
+-USE=""
++USE="kernel-5_10 -kernel-4_14"
+```
+
+Rebuild package
+
+``` shell
+# (inside)
+./build_packages --board=${BOARD}
+./build_image --board=${BOARD} --noenable_rootfs_verification test
+```
+
+### Way 2: use cros_workon
+
+`cros_workon` cloud add single package to BOARD
+
+``` shell
+# (inside)
+emerge-amd64-generic --unmerge chromeos-kernel-4_14
+cros_workon --board=amd64-generic start sys-kernel/chromeos-kernel-5_10
+cros_workon --board=amd64-generic --install chromeos-kernel-5_10
+emerage-amd64-generic sys-kernel/chromeos-kernel-5_10
+./build_packages --board=${BOARD}
+./build_image --board=${BOARD} --noenable_rootfs_verification test
+```
