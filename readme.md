@@ -2,7 +2,9 @@
 
 This article will describe how to compile Chromium OS.
 
-In this article, `(outside)` mean you need run command outside the `cros_sdk`, `(inside)` mean that you need run command in `cros_sdk`.
+In this article:
+ - `(outside)` mean you need run command outside the `cros_sdk`
+ - `(inside)` mean that you need run command in `cros_sdk`.
 
 ## 0: Prepare
 
@@ -62,7 +64,7 @@ add `export PATH=/path/to/depot_tools:$PATH` to `~/.bashrc`
 
 ### Start cros_sdk
 
-* This step will take you around 3-5 hours
+*This step will take you around 3-5 hours*
 
 1. Enter chromiumos workdir
 
@@ -176,7 +178,7 @@ cros_vm --stop --board=${BOARD}
 
 ### Way 1: change virtual/linux-sources USE
 
-`kernel-5_10` and `kernel-4_14` are in `virtual/linux-sources`'s USE, you can install 5.10 kernel by `virtual/linux-sources`.
+Both of `kernel-5_10` and `kernel-4_14` are in `virtual/linux-sources`'s USE, you can install 5.10 kernel by `virtual/linux-sources`.
 
 ``` shell
 # (inside)
@@ -215,7 +217,7 @@ vim /build/amd64-generic/etc/make.conf
 +USE="kernel-5_10 -kernel-4_14"
 ```
 
-Rebuild package
+Rebuild image
 
 ``` shell
 # (inside)
@@ -225,6 +227,7 @@ emerge-${BOARD} --unmerge chromeos-kernel-4_14
 ./image_to_vm.sh --board=${BOARD} --test_image
 ```
 
+Check current kernel version
 ```
 localhost ~ # uname -a
 Linux localhost 5.10.108-12117-g4b3aa89a142d #1 SMP PREEMPT Mon Mar 28 00:35:07 CST 2022 x86_64 Intel Xeon E312xx (Sandy Bridge) AuthenticAMD GNU/Linux
@@ -303,7 +306,7 @@ ID=$(docker run -d --privileged cros-sdk -- ./build_packages --board=$BOARD --no
 docker logs -f ${ID}
 docker wait ${ID}
 docker commit ${ID} cros-sdk:$BOARD
-docker run -d --volume static:/usr/lib64/devserver/static/:rw --privileged cros-sdk -- sudo start_devserver
+docker run -d --volume ./static:/home/cros/chromiumos/chroot/usr/lib64/devserver/static/:rw -p 8080:8080 --privileged cros-sdk -- sudo start_devserver
 ```
 
 ## 4: Connect with devserver
@@ -399,7 +402,7 @@ An error occurred in your build so your latest output directory is invalid.
 Would you like to delete the output directory (y/N)? 
 ```
 
-This may be caused by my improper use of `cros_workon`. I have tried to return to the 4.14 kernel, `cros_workon stop`, `cros_sdk --delete` to delete the chroot, and I still have this error. Finally, I reinstalled the system and did not use it again.` cros_workon`
+This may be caused by my improper use of `cros_workon`. I have tried to return to the 4.14 kernel, `cros_workon stop`, `cros_sdk --delete`, and I still have this error. Finally, I reinstalled the system and did not use it again.
 
 ### Problem 4: cryptohome build failed under `kernel-5_10` USE
 
